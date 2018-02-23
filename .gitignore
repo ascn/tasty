@@ -1,0 +1,10 @@
+.idea/
+Build/
+cmake-build-debug/
+*.bgeo
+*.png
+*.jpg
+*.mp4
+*.avi
+main
+example
