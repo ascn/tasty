@@ -9,3 +9,4 @@ cmake-build-debug/
 Projects/Makefile
 Projects/example/Makefile
 example_debug
+main_debug

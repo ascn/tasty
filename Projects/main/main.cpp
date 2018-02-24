@@ -1,6 +1,4 @@
-#include <Partio.h>
-#include <tetgen.h>
-#include <Eigen/Core>
+#include <globalincludes.h>
 
 int main(int argc, char **argv) {
 
