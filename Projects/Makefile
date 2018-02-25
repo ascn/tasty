@@ -7,11 +7,11 @@
 SHELL := /bin/bash
 RM    := rm -rf
 MKDIR := mkdir -p
-BUILDROOT := /mnt/d/Users/achan/Projects/cis563/solid-sim/Build
+BUILDROOT := /mnt/c/Users/TDH/Desktop/CIS563/tasty/Build
 BUILDDEFAULT := Release
 RELATIVEPATH := Projects
 BUILDDIR = $(BUILDROOT)/$(BUILDDEFAULT)/$(RELATIVEPATH)
-ROOTDIR := /mnt/d/Users/achan/Projects/cis563/solid-sim
+ROOTDIR := /mnt/c/Users/TDH/Desktop/CIS563/tasty
 BUILDTYPES := Release MinSizeRel Debug Coverage RelWithDebInfo Quick
 OTHERGOALS := $(filter-out distclean $(BUILDTYPES),$(MAKECMDGOALS))
 
