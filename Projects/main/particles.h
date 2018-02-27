@@ -87,7 +87,7 @@ void Particles<T, dim>::tick(T time) {
         }
 
         for (int j = 0; j < 3; j++) {
-            colors[i][j] = float((std::rand() % 100) / 100.0);
+            //colors[i][j] = float((std::rand() % 100) / 100.0);
         }
     }
 };
@@ -158,8 +158,8 @@ void Particles<T, dim>::writePartio(const std::string& particleFile)
             p[k] = (T)xs[i][k];
         for (int k = 0; k < 3; k++)
             v[k] = (T)vs[i][k];
-        for (int k = 0; k < 3; k++)
-            c[k] = (T)colors[i][k];
+        for (int k = 0; k < 3; k++);
+            //c[k] = (T)colors[i][k];
     }
 
     Partio::write(particleFile.c_str(), *parts);

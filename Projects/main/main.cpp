@@ -1,70 +1,45 @@
 #include "globalincludes.h"
 #include "tetra.h"
 #include "particles.h"
+#include "tastyio.h"
 
-void parseNodeFile(const std::string &inputNodeFile, Particles<float, 3> &ps) {
-	std::string text;
-	std::ifstream file(inputNodeFile);
+#define BGEO_DIR "frames/"
+#define TET_OUTNAME "cubeout"
+#define BGEO_EXT ".bgeo"
+#define BGEO_FNAME_PREFIX "frame_"
 
-	getline(file, text); //skipping over first line
-
-	while(getline(file, text)) //each line of the file has the index of the particle then its x, y, and z coordinates
-	{
-		std::vector<float> vals;
-		unsigned int idx = 0;
-		while (!text.empty()) {
-			idx = text.find(" ");
-			std::string x = text.substr(0, idx);
-			vals.push_back(std::stof(x));
-			text.erase(0, idx + 1);
-		}
-
-		Eigen::Matrix<float, 3, 1> x;
-		x[0] = vals[1]; x[1] = vals[2]; x[2] = vals[3];
-
-        Eigen::Matrix<float, 3, 1> v;
-        v[0] = 0.f; v[1] = 0.f; v[2] = 0.f;
-
-        Eigen::Matrix<float, 3, 1> f;
-        f[0] = 0.f; f[1] = 0.f; f[2] = 0.f;
-
-        Eigen::Matrix<float, 3, 1> a;
-        a[0] = 0.f; a[1] = -9.8; a[2] = 0.f;
-
-        ps.addParticle(x, v, 1.f, f, a);
-	}
-}
-
-void parseEleFile(const std::string &inputEleFile, std::vector<Tetra<float, 3>> &tets, float k){
-	std::string text;
-	std::ifstream file(inputEleFile);
-
-	getline(file, text); //skipping over first line
-
-	while(getline(file, text)) //each line of the file has the index of the tetra then the indices of the four particles that make up the tetra
-	{
-		std::vector<float> vals;
-		unsigned int idx = 0;
-		while (!text.empty()) {
-			idx = text.find(" ");
-			std::string x = text.substr(0, idx);
-			vals.push_back(std::stoi(x));
-			text.erase(0, idx + 1);
-		}
-
-		Tetra<float, 3> t = Tetra<float, 3>(vals[1], vals[2], vals[3], vals[4], k);
-		tets.push_back(t);
-	}
-}
-
+constexpr int frames = 120;
 int main(int argc, char **argv) {
+	// Tetrahedralize .obj and write to ele, node, face files
+	tetgenio in, out;
+	TastyIO::readOBJ("cube.obj", in);
+
+	tetrahedralize("pq1.1/0a0.1", &in, &out);
+
+	out.save_nodes(TET_OUTNAME);
+	out.save_elements(TET_OUTNAME);
+	out.save_faces(TET_OUTNAME);
+
 	//create a list of tetrahedra and an instance of particles from the .node and .ele files
+    float k = 0.000001; //Young's modulus of jello
     Particles<float, 3> ptickles = Particles<float, 3>();
     std::vector<Tetra<float, 3>> tets;
+    TastyIO::parseNodeFile(TET_OUTNAME ".node", ptickles);
+    TastyIO::parseEleFile(TET_OUTNAME ".ele", tets, k, ptickles);
 
-    float k = 0.000001; //Young's modulus of jello
-
-	// call computeElasticForces every frame for every tetrahedra
     // call writePartio for each frame
+    for (int i = 0; i < frames; i++) {
+        // call computeElasticForces every frame for every tetrahedra
+        for (Tetra<float, 3> tet : tets) {
+            tet.computeElasticForces();
+        }
+		for (auto &t : tets) {
+			t.tick(1.f / 24.f);
+		}
+		std::stringstream ss;
+		ss << std::setw(3) << std::setfill('0') << i;
+        ptickles.writePartio(std::string(BGEO_DIR) + std::string(BGEO_FNAME_PREFIX) + ss.str() + std::string(BGEO_EXT));
+    }
+
 	return 0;
 }

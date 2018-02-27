@@ -11,9 +11,12 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>
+#include <iomanip>
 
+using Vector2i = Eigen::Matrix<int, 2, 1>;
 using Vector2f = Eigen::Matrix<float, 2, 1>;
 using Vector2d = Eigen::Matrix<double, 2, 1>;
+using Vector3i = Eigen::Matrix<int, 3, 1>;
 using Vector3f = Eigen::Matrix<float, 3, 1>;
 using Vector3d = Eigen::Matrix<double, 3, 1>;
 using Mat3f = Eigen::Matrix<float, 3, 3>;
