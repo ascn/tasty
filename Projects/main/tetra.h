@@ -27,6 +27,7 @@ public:
     void computeW();
     void computeP();
     void computeElasticForces(); // simple model for now
+	void tick(T t) { p->tick(t); }
 
     T W; // undeformed volume of the tetrahedra
     T k;
@@ -103,6 +104,11 @@ void Tetra<T, dim>::computeW() { // volume of the tetra
 template <typename T, int dim>
 void Tetra<T, dim>::computeP() { // strain energy density
     P = T((k / T(2.0)) * (F - Eigen::Matrix<T, 3, 3>::Identity()).norm());
+	Eigen::Matrix<T, 3, 3> t1 = F - Eigen::Matrix<T, 3, 3>::Identity();
+	T t2 = t1.norm();
+	T t3 = T(k / 2.0) * t2;
+	std::cout << t2 << std::endl;
+	std::cout << t3 << std::endl;
 };
 
 template <typename T, int dim>

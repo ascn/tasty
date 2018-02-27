@@ -65,10 +65,11 @@ public:
 template <typename T, int dim>
 void Particles<T, dim>::tick(T time) {
     for (unsigned i = 0; i < xs.size(); i++) {
+		as[i] = fs[i] / ms[i];
         vs[i] += as[i] * time; // simple position and velocity case
         xs[i] += vs[i] * time;
         for (int j = 0; j < 3; j++) {
-            colors[i][j] = float((std::rand() % 100) / 100.0);
+            //colors[i][j] = float((std::rand() % 100) / 100.0);
         }
     }
 };
