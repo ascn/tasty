@@ -65,8 +65,27 @@ public:
 template <typename T, int dim>
 void Particles<T, dim>::tick(T time) {
     for (unsigned i = 0; i < xs.size(); i++) {
-        vs[i] += as[i] * time; // simple position and velocity case
-        xs[i] += vs[i] * time;
+        //vs[i] += as[i] * time; // simple position and velocity case
+        //xs[i] += vs[i] * time;
+
+        //second order Runge Kutta
+        Eigen::Matrix<T, dim, 1> d1 = time * vs[i];
+        Eigen::Matrix<T, dim, 1> d2 = xs[i] + time * vs[i];
+        xs[i] = xs[i] + (d1 + d2)/2.0;
+
+        Eigen::Matrix<T, dim, 1> d3 = time * as[i];
+        Eigen::Matrix<T, dim, 1> d4 = vs[i] + time * as[i];
+        vs[i] = vs[i] + (d3 + d4)/2.0;
+
+        as[i] = fs[i] / ms[i];
+
+        //collision detection
+        if(xs[i][1] < 0) {
+            if(vs[i][1] < 0) {
+                vs[i][1] = 0;
+            }
+        }
+
         for (int j = 0; j < 3; j++) {
             colors[i][j] = float((std::rand() % 100) / 100.0);
         }
