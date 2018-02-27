@@ -11,3 +11,5 @@ Projects/example/Makefile
 Projects/main/Makefile
 example_debug
 main_debug
+Projects/example/example
+Projects/main/main
