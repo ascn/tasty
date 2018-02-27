@@ -68,10 +68,11 @@ void Tetra::computeElasticForces() { // simple model for now
     computeDs();
     computeDefGrad();
     computeP();
+
     // compute H
+    Eigen::Matrix<T, 3, 3> H;
 
     // add forces to p1, p2, p3, p4
-    Eigen::Matrix<T, 3, 3> H;
     p->addForce(x1, H.col(0));
     p->addForce(x2, H.col(1));
     p->addForce(x3, H.col(2));
