@@ -6,3 +6,7 @@ cmake-build-debug/
 *.jpg
 *.mp4
 *.avi
+Projects/Makefile
+Projects/example/Makefile
+example_debug
+main_debug

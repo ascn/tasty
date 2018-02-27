@@ -4,3 +4,4 @@ if(CREATE_LOCAL_MAKEFILES)
 endif()
 
 add_subdirectory(example)
+add_subdirectory(main)
