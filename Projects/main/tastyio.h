@@ -9,7 +9,7 @@ namespace TastyIO {
 
 void readOBJ(const std::string &objFilename, tetgenio &out);
 void parseNodeFile(const std::string &inputNodeFile, Particles<float, 3> &ps);
-void parseEleFile(const std::string &inputEleFile, std::vector<Tetra<float, 3>> &tets, float k);
+void parseEleFile(const std::string &inputEleFile, std::vector<Tetra<float, 3>> &tets, float k, Particles<float, 3> &p);
 
 }
 

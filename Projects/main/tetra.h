@@ -9,12 +9,13 @@
 template <typename T, int dim>
 class Tetra {
 public:
-    Tetra(int x1, int x2, int x3, int x4, T k) : W(T(0.0)),
+    Tetra(int x1, int x2, int x3, int x4, T k, Particles<T, dim> *p) : W(T(0.0)),
               // strainE(T(0.0)),
               F(Eigen::Matrix<T, 3, 3>()),
               Ds(Eigen::Matrix<T, 3, 3>()),
               Dm(Eigen::Matrix<T, 3, 3>()),
-              x1(x1), x2(x2), x3(x3), x4(x4)
+              x1(x1), x2(x2), x3(x3), x4(x4),
+              p(p)
                 {
                     computeDm(); // pre-compute the rest state
                     computeW();
@@ -30,10 +31,11 @@ public:
     T W; // undeformed volume of the tetrahedra
     T k;
     // T strainE; // strain energy
+    Eigen::Matrix<T, 3, 3> B;
     Eigen::Matrix<T, 3, 3> F; // deformation gradient
     Eigen::Matrix<T, 3, 3> Ds; // deformed state
     Eigen::Matrix<T, 3, 3> Dm; // material state
-    Eigen::Matrix<T, 3, 3> P;
+    T P;
     int x1;
     int x2;
     int x3;
@@ -63,13 +65,14 @@ void Tetra<T, dim>::computeDm() { // material's rest state
     Dm(0, 2) = x3x4[0];
     Dm(1, 2) = x3x4[1];
     Dm(2, 2) = x3x4[2];
+    B = Dm.inverse();
 };
 
 template <typename T, int dim>
 void Tetra<T, dim>::computeDs() { // Ds is the deformed state
-    Eigen::Matrix<T, 3, 3> x1x4 = p->getPosition(x1) - p->getPosition(x4);
-    Eigen::Matrix<T, 3, 3> x2x4 = p->getPosition(x2) - p->getPosition(x4);
-    Eigen::Matrix<T, 3, 3> x3x4 = p->getPosition(x3) - p->getPosition(x4);
+    Eigen::Matrix<T, 3, 1> x1x4 = p->getPosition(x1) - p->getPosition(x4);
+    Eigen::Matrix<T, 3, 1> x2x4 = p->getPosition(x2) - p->getPosition(x4);
+    Eigen::Matrix<T, 3, 1> x3x4 = p->getPosition(x3) - p->getPosition(x4);
 
     // first column = x1 - x4
     Ds(0, 0) = x1x4[0];
@@ -99,7 +102,7 @@ void Tetra<T, dim>::computeW() { // volume of the tetra
 
 template <typename T, int dim>
 void Tetra<T, dim>::computeP() { // strain energy density
-    P = (k / T(2.0)) * (F - Eigen::Matrix<T, 3, 3>::Identity()).norm();
+    P = T((k / T(2.0)) * (F - Eigen::Matrix<T, 3, 3>::Identity()).norm());
 };
 
 template <typename T, int dim>
@@ -109,7 +112,7 @@ void Tetra<T, dim>::computeElasticForces() { // simple model for now
     computeP();
 
     // compute H
-    Eigen::Matrix<T, 3, 3> H;
+    Eigen::Matrix<T, 3, 3> H = W * P * B.transpose();
 
     // add forces to p1, p2, p3, p4
     p->addForce(x1, H.col(0));

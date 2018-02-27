@@ -86,11 +86,12 @@ void TastyIO::parseNodeFile(const std::string &inputNodeFile, Particles<float, 3
 	{
 		std::vector<float> vals;
 		unsigned int idx = 0;
-		while (!text.empty()) {
-			idx = text.find(" ");
-			std::string x = text.substr(0, idx);
-			vals.push_back(std::stof(x));
-			text.erase(0, idx + 1);
+		std::vector<std::string> textTokens;
+		split(text, ' ', textTokens);
+		for (unsigned int i = 0; i < textTokens.size(); ++i) {
+			if (textTokens[i].length() > 0) {
+				vals.push_back(std::stof(textTokens[i]));
+			}
 		}
 
 		Eigen::Matrix<float, 3, 1> x;
@@ -109,7 +110,7 @@ void TastyIO::parseNodeFile(const std::string &inputNodeFile, Particles<float, 3
 	}
 }
 
-void TastyIO::parseEleFile(const std::string &inputEleFile, std::vector<Tetra<float, 3>> &tets, float k) {
+void TastyIO::parseEleFile(const std::string &inputEleFile, std::vector<Tetra<float, 3>> &tets, float k, Particles<float, 3> &p) {
 	std::string text;
 	std::ifstream file(inputEleFile);
 
@@ -119,14 +120,15 @@ void TastyIO::parseEleFile(const std::string &inputEleFile, std::vector<Tetra<fl
 	{
 		std::vector<float> vals;
 		unsigned int idx = 0;
-		while (!text.empty()) {
-			idx = text.find(" ");
-			std::string x = text.substr(0, idx);
-			vals.push_back(std::stoi(x));
-			text.erase(0, idx + 1);
-		}
+        std::vector<std::string> textTokens;
+        split(text, ' ', textTokens);
+        for (unsigned int i = 0; i < textTokens.size(); ++i) {
+            if (textTokens[i].length() > 0) {
+                vals.push_back(std::stoi(textTokens[i]));
+            }
+        }
 
-		Tetra<float, 3> t = Tetra<float, 3>(vals[1], vals[2], vals[3], vals[4], k);
+		Tetra<float, 3> t = Tetra<float, 3>(vals[1], vals[2], vals[3], vals[4], k, &p);
 		tets.push_back(t);
 	}
 }

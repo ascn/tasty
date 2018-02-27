@@ -139,8 +139,8 @@ void Particles<T, dim>::writePartio(const std::string& particleFile)
             p[k] = (T)xs[i][k];
         for (int k = 0; k < 3; k++)
             v[k] = (T)vs[i][k];
-        for (int k = 0; k < 3; k++)
-            c[k] = (T)colors[i][k];
+        for (int k = 0; k < 3; k++);
+            //c[k] = (T)colors[i][k];
     }
 
     Partio::write(particleFile.c_str(), *parts);
