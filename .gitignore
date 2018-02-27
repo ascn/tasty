@@ -8,5 +8,6 @@ cmake-build-debug/
 *.avi
 Projects/Makefile
 Projects/example/Makefile
+Projects/main/Makefile
 example_debug
 main_debug
