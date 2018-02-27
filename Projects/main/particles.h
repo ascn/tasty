@@ -1,7 +1,5 @@
 #pragma once
-#include <stdlib.h>
-#include <Eigen/Core>
-#include <Eigen/Dense>
+#include "globalincludes.h"
 
 template <typename T, int dim>
 class Particles {

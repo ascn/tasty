@@ -4,6 +4,8 @@
 #include <Partio.h>
 #include <tetgen.h>
 #include <Eigen/Core>
+#include <Eigen/Dense>
+#include <cstdlib>
 #include <string>
 #include <vector>
 #include <iostream>

@@ -4,7 +4,7 @@
 
 #include "tetra.h"
 template <typename T, int dim>
-void Tetra::computeDm() { // material's rest state
+void Tetra<T, dim>::computeDm() { // material's rest state
     // assume that this is called at frame 0
     Eigen::Matrix<T, 3, 3> x1x4 = p->getPosition(x1) - p->getPosition(x4);
     Eigen::Matrix<T, 3, 3> x2x4 = p->getPosition(x2) - p->getPosition(x4);
@@ -27,7 +27,7 @@ void Tetra::computeDm() { // material's rest state
 };
 
 template <typename T, int dim>
-void Tetra::computeDs() { // Ds is the deformed state
+void Tetra<T, dim>::computeDs() { // Ds is the deformed state
     Eigen::Matrix<T, 3, 3> x1x4 = p->getPosition(x1) - p->getPosition(x4);
     Eigen::Matrix<T, 3, 3> x2x4 = p->getPosition(x2) - p->getPosition(x4);
     Eigen::Matrix<T, 3, 3> x3x4 = p->getPosition(x3) - p->getPosition(x4);
@@ -49,22 +49,22 @@ void Tetra::computeDs() { // Ds is the deformed state
 };
 
 template <typename T, int dim>
-void Tetra::computeDefGrad() { // F = DsDm^(-1)
+void Tetra<T, dim>::computeDefGrad() { // F = DsDm^(-1)
     F = Ds * Dm.inverse();
 };
 
 template <typename T, int dim>
-void Tetra::computeW() { // volume of the tetra
+void Tetra<T, dim>::computeW() { // volume of the tetra
     W = (T(1.0) / T(6.0)) * Dm.determinant();
 };
 
 template <typename T, int dim>
-void Tetra::computeP() { // strain energy density
+void Tetra<T, dim>::computeP() { // strain energy density
     P = (k / T(2.0)) * (F - Eigen::Matrix<T, 3, 3>::Identity()).norm();
 };
 
 template <typename T, int dim>
-void Tetra::computeElasticForces() { // simple model for now
+void Tetra<T, dim>::computeElasticForces() { // simple model for now
     computeDs();
     computeDefGrad();
     computeP();
