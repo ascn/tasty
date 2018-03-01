@@ -76,7 +76,7 @@ void TastyIO::readOBJ(const std::string &objFilename, tetgenio &out) {
 	objFile.close();
 }
 
-void TastyIO::parseNodeFile(const std::string &inputNodeFile, Particles<float, 3> &ps) {
+void TastyIO::parseNodeFile(const std::string &inputNodeFile, Particles<double, 3> &ps) {
 	std::string text;
 	std::ifstream file(inputNodeFile);
 
@@ -84,33 +84,33 @@ void TastyIO::parseNodeFile(const std::string &inputNodeFile, Particles<float, 3
 
 	while(getline(file, text)) //each line of the file has the index of the particle then its x, y, and z coordinates
 	{
-		std::vector<float> vals;
+		std::vector<double> vals;
 		unsigned int idx = 0;
 		std::vector<std::string> textTokens;
 		split(text, ' ', textTokens);
 		for (unsigned int i = 0; i < textTokens.size(); ++i) {
 			if (textTokens[i].length() > 0) {
-				vals.push_back(std::stof(textTokens[i]));
+				vals.push_back(std::stod(textTokens[i]));
 			}
 		}
 
-		Eigen::Matrix<float, 3, 1> x;
+		Eigen::Matrix<double, 3, 1> x;
 		x[0] = vals[1]; x[1] = vals[2]; x[2] = vals[3];
 
-		Eigen::Matrix<float, 3, 1> v;
+		Eigen::Matrix<double, 3, 1> v;
 		v[0] = 0.f; v[1] = 0.f; v[2] = 0.f;
 
-		Eigen::Matrix<float, 3, 1> f;
+		Eigen::Matrix<double, 3, 1> f;
 		f[0] = 0.f; f[1] = 0.f; f[2] = 0.f;
 
-		Eigen::Matrix<float, 3, 1> a;
-		a[0] = 0.f; a[1] = -9.8; a[2] = 0.f;
+		Eigen::Matrix<double, 3, 1> a;
+		a[0] = 0.f; a[1] = 0.f; a[2] = 0.f;
 
-		ps.addParticle(x, v, 1.f, f, a);
+		ps.addParticle(x, v, 0.f, f, a);
 	}
 }
 
-void TastyIO::parseEleFile(const std::string &inputEleFile, std::vector<Tetra<float, 3>> &tets, float k, Particles<float, 3> &p) {
+void TastyIO::parseEleFile(const std::string &inputEleFile, std::vector<Tetra<double, 3>> &tets, double k, Particles<double, 3> &p) {
 	std::string text;
 	std::ifstream file(inputEleFile);
 
@@ -118,7 +118,7 @@ void TastyIO::parseEleFile(const std::string &inputEleFile, std::vector<Tetra<fl
 
 	while(getline(file, text)) //each line of the file has the index of the tetra then the indices of the four particles that make up the tetra
 	{
-		std::vector<float> vals;
+		std::vector<double> vals;
 		unsigned int idx = 0;
         std::vector<std::string> textTokens;
         split(text, ' ', textTokens);
@@ -128,7 +128,7 @@ void TastyIO::parseEleFile(const std::string &inputEleFile, std::vector<Tetra<fl
             }
         }
 
-		Tetra<float, 3> t = Tetra<float, 3>(vals[1], vals[2], vals[3], vals[4], k, &p);
+		Tetra<double, 3> t = Tetra<double, 3>(vals[1], vals[2], vals[3], vals[4], k, &p);
 		tets.push_back(t);
 	}
 }

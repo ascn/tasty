@@ -9,25 +9,28 @@
 template <typename T, int dim>
 class Tetra {
 public:
-    Tetra(int x1, int x2, int x3, int x4, T k, Particles<T, dim> *p) : W(T(0.0)),
-              // strainE(T(0.0)),
+    Tetra(int x1, int x2, int x3, int x4, T k, Particles<T, dim> *p) :
+			W(T(0.0)),
+			// strainE(T(0.0)),
+			  k(k),
               F(Eigen::Matrix<T, 3, 3>()),
               Ds(Eigen::Matrix<T, 3, 3>()),
               Dm(Eigen::Matrix<T, 3, 3>()),
-              x1(x1), x2(x2), x3(x3), x4(x4),
-              p(p)
+		      P(Eigen::Matrix<T, 3, 3>()),
+              x1(x1), x2(x2), x3(x3), x4(x4), p(p)
                 {
                     computeDm(); // pre-compute the rest state
                     computeW();
+					computeParticleMass();
                 }
 
     void computeDm(); // material's rest state
     void computeDs(); // Ds is the deformed state
     void computeDefGrad(); // F = DsDm^(-1)
     void computeW();
+	void computeParticleMass();
     void computeP();
     void computeElasticForces(); // simple model for now
-	void tick(T t) { p->tick(t); }
 
     T W; // undeformed volume of the tetrahedra
     T k;
@@ -36,7 +39,7 @@ public:
     Eigen::Matrix<T, 3, 3> F; // deformation gradient
     Eigen::Matrix<T, 3, 3> Ds; // deformed state
     Eigen::Matrix<T, 3, 3> Dm; // material state
-    T P;
+    Eigen::Matrix<T, 3, 3> P;
     int x1;
     int x2;
     int x3;
@@ -76,19 +79,31 @@ void Tetra<T, dim>::computeDs() { // Ds is the deformed state
     Eigen::Matrix<T, 3, 1> x3x4 = p->getPosition(x3) - p->getPosition(x4);
 
     // first column = x1 - x4
-    Ds(0, 0) = x1x4[0];
-    Ds(1, 0) = x1x4[1];
-    Ds(2, 0) = x1x4[2];
+	Mat3d tmp;
+	
+    tmp(0, 0) = x1x4[0];
+    tmp(1, 0) = x1x4[1];
+    tmp(2, 0) = x1x4[2];
 
     // second column = x2 - x4
-    Ds(0, 1) = x2x4[0];
-    Ds(1, 1) = x2x4[1];
-    Ds(2, 1) = x2x4[2];
+    tmp(0, 1) = x2x4[0];
+    tmp(1, 1) = x2x4[1];
+    tmp(2, 1) = x2x4[2];
 
     // third column = x3 - x4
-    Ds(0, 2) = x3x4[0];
-    Ds(1, 2) = x3x4[1];
-    Ds(2, 2) = x3x4[2];
+    tmp(0, 2) = x3x4[0];
+    tmp(1, 2) = x3x4[1];
+    tmp(2, 2) = x3x4[2];
+
+    for (unsigned int i = 0; i < 3; ++i) {
+        for (unsigned int j = 0; j < 3; ++j) {
+            if (std::abs(tmp(i, j) - Dm(i, j)) < 1e-6) {
+                Ds(i, j) = Dm(i, j);
+            } else {
+                Ds(i, j) = tmp(i, j);
+            }
+        }
+    }
 };
 
 template <typename T, int dim>
@@ -97,28 +112,83 @@ void Tetra<T, dim>::computeDefGrad() { // F = DsDm^(-1)
 };
 
 template <typename T, int dim>
-void Tetra<T, dim>::computeW() { // volume of the tetra
-    W = (T(1.0) / T(6.0)) * Dm.determinant();
+void Tetra<T, dim>::computeW() { // volume of the undeformed tetra
+	W = std::abs((1.0 / 6.0) * Dm.determinant());
 };
+
+enum class StrainModel {
+	Linear,
+	StVenant_Kirchhoff,
+	CorotatedLinear,
+	Neohookean,
+	pba
+};
+
+template <typename T, int dim>
+void Tetra<T, dim>::computeParticleMass() {
+	float density = 1000.f;
+	float tetMass = density * W;
+	p->ms[x1] += tetMass / 4.f;
+	p->ms[x2] += tetMass / 4.f;
+	p->ms[x3] += tetMass / 4.f;
+	p->ms[x4] += tetMass / 4.f;
+}
 
 template <typename T, int dim>
 void Tetra<T, dim>::computeP() { // strain energy density
-    P = T((k / T(2.0)) * (F - Eigen::Matrix<T, 3, 3>::Identity()).norm());
-	Eigen::Matrix<T, 3, 3> t1 = F - Eigen::Matrix<T, 3, 3>::Identity();
-	T t2 = t1.norm();
-	T t3 = T(k / 2.0) * t2;
-	std::cout << t2 << std::endl;
-	std::cout << t3 << std::endl;
+	double nu = 0.3;
+	double mu = k / (2 * (1.0 + nu));
+	double lambda = (k * nu) / ((1.0 + nu) * (1.0 - (2.0 * nu)));
+	Mat3d E = (1.0 / 2.0) * (F.transpose() * F - Mat3d::Identity());
+
+	StrainModel model = StrainModel::pba;
+	switch (model) {
+	case StrainModel::Linear:
+		P = mu * (F + F.transpose() - 2 * Mat3d::Identity()) + lambda * (F - Mat3d::Identity()).trace() * Mat3d::Identity();
+		break;
+	case StrainModel::StVenant_Kirchhoff:
+		P = F * (2.f * mu * E + lambda * E.trace() * Mat3d::Identity());
+		break;
+	case StrainModel::CorotatedLinear: {
+		Eigen::JacobiSVD<Mat3d> svd(F, Eigen::ComputeFullU | Eigen::ComputeFullV);
+		Mat3d U = svd.matrixU();
+		Mat3d V = svd.matrixV();
+		Mat3d R = U * V.transpose();
+		P = 2 * mu * (F - R) + lambda * (R.transpose() * F - Mat3d::Identity()).trace() * R;
+		break;
+	}
+	case StrainModel::Neohookean: {
+		Eigen::JacobiSVD<Mat3d> svd(F, Eigen::ComputeFullU | Eigen::ComputeFullV);
+		Mat3d F_invTrans = F.inverse().transpose();
+		float J = F.determinant();
+		float logJ = std::log(J);
+		P = mu * (F - mu * F_invTrans) + lambda * logJ * F_invTrans;
+		break;
+	}
+	case StrainModel::pba: {
+		Eigen::JacobiSVD<Mat3d> svd(F, Eigen::ComputeFullU | Eigen::ComputeFullV);
+		Mat3d U = svd.matrixU();
+		Mat3d V = svd.matrixV();
+		if (U.determinant() < 0) { U.col(2) *= -1; }
+		if (V.determinant() < 0) { V.col(2) *= -1; }
+
+		Mat3d R = U * V.transpose();
+
+		Mat3d F_invTrans = F.inverse().transpose();
+		double J = F.determinant();
+		P = 2 * mu * (F - R) + lambda * (J - 1.f) * J * F_invTrans;
+	}
+	}
 };
 
 template <typename T, int dim>
-void Tetra<T, dim>::computeElasticForces() { // simple model for now
+void Tetra<T, dim>::computeElasticForces() {
     computeDs();
     computeDefGrad();
     computeP();
 
     // compute H
-    Eigen::Matrix<T, 3, 3> H = W * P * B.transpose();
+    Eigen::Matrix<T, 3, 3> H = -W * P * B;//.transpose();
 
     // add forces to p1, p2, p3, p4
     p->addForce(x1, H.col(0));
