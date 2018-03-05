@@ -79,36 +79,34 @@ void Tetra<T, dim>::computeDs() { // Ds is the deformed state
     Eigen::Matrix<T, 3, 1> x3x4 = p->getPosition(x3) - p->getPosition(x4);
 
     // first column = x1 - x4
-	Mat3d tmp;
-	
-    tmp(0, 0) = x1x4[0];
-    tmp(1, 0) = x1x4[1];
-    tmp(2, 0) = x1x4[2];
+    Ds(0, 0) = x1x4[0];
+    Ds(1, 0) = x1x4[1];
+    Ds(2, 0) = x1x4[2];
 
     // second column = x2 - x4
-    tmp(0, 1) = x2x4[0];
-    tmp(1, 1) = x2x4[1];
-    tmp(2, 1) = x2x4[2];
+    Ds(0, 1) = x2x4[0];
+    Ds(1, 1) = x2x4[1];
+    Ds(2, 1) = x2x4[2];
 
     // third column = x3 - x4
-    tmp(0, 2) = x3x4[0];
-    tmp(1, 2) = x3x4[1];
-    tmp(2, 2) = x3x4[2];
-
-    for (unsigned int i = 0; i < 3; ++i) {
-        for (unsigned int j = 0; j < 3; ++j) {
-            if (std::abs(tmp(i, j) - Dm(i, j)) < 1e-6) {
-                Ds(i, j) = Dm(i, j);
-            } else {
-                Ds(i, j) = tmp(i, j);
-            }
-        }
-    }
+    Ds(0, 2) = x3x4[0];
+    Ds(1, 2) = x3x4[1];
+    Ds(2, 2) = x3x4[2];
 };
 
 template <typename T, int dim>
 void Tetra<T, dim>::computeDefGrad() { // F = DsDm^(-1)
     F = Ds * Dm.inverse();
+    for (unsigned int i = 0; i < 3; ++i)
+    {
+        for (unsigned int j = 0; j < 3; ++j)
+        {
+            if (std::abs(F(i,j)) < 1e-12)
+            {
+                F(i,j) = 0.f;
+            }
+        }
+    }
 };
 
 template <typename T, int dim>
@@ -174,9 +172,18 @@ void Tetra<T, dim>::computeP() { // strain energy density
 
 		Mat3d R = U * V.transpose();
 
-		Mat3d F_invTrans = F.inverse().transpose();
-		double J = F.determinant();
-		P = 2 * mu * (F - R) + lambda * (J - 1.f) * J * F_invTrans;
+        Mat3d JFinvT;
+        JFinvT(0, 0) = F(1, 1) * F(2, 2) - F(1, 2) * F(2, 1);
+        JFinvT(0, 1) = F(1, 2) * F(2, 0) - F(1, 0) * F(2, 2);
+        JFinvT(0, 2) = F(1, 0) * F(2, 1) - F(1, 1) * F(2, 0);
+        JFinvT(1, 0) = F(0, 2) * F(2, 1) - F(0, 1) * F(2, 2);
+        JFinvT(1, 1) = F(0, 0) * F(2, 2) - F(0, 2) * F(2, 0);
+        JFinvT(1, 2) = F(0, 1) * F(2, 0) - F(0, 0) * F(2, 1);
+        JFinvT(2, 0) = F(0, 1) * F(1, 2) - F(0, 2) * F(1, 1);
+        JFinvT(2, 1) = F(0, 2) * F(1, 0) - F(0, 0) * F(1, 2);
+        JFinvT(2, 2) = F(0, 0) * F(1, 1) - F(0, 1) * F(1, 0);
+        double J = F.determinant();
+        P = 2 * mu * (F - R) + lambda * (J - 1.f) * JFinvT;
 	}
 	}
 };
@@ -188,7 +195,7 @@ void Tetra<T, dim>::computeElasticForces() {
     computeP();
 
     // compute H
-    Eigen::Matrix<T, 3, 3> H = -W * P * B;//.transpose();
+    Eigen::Matrix<T, 3, 3> H = -W * P * B.transpose();
 
     // add forces to p1, p2, p3, p4
     p->addForce(x1, H.col(0));

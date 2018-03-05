@@ -85,9 +85,7 @@ public:
 
 	void resetForces() {
 		for (unsigned int i = 0; i < fs.size(); ++i) {
-			for (unsigned int j = 0; j < dim; ++j) {
-				fs[i][j] == 0;
-			}
+			fs[i] = Eigen::Matrix<T, dim, 1>::Zero();
 		}
 	}
 
@@ -126,6 +124,11 @@ void Particles<T, dim>::tick(T time) {
 		case Integrator::Euler:
 			as[i] = fs[i] / ms[i];
 			vs[i] += as[i] * time; // simple position and velocity case
+			if (xs[i][1] < 0.f && vs[i][1] < 0.f){
+				vs[i][0] = 0.f;
+				vs[i][1] = 0.f;
+				vs[i][2] = 0.f;
+			}
 			xs[i] += vs[i] * time;
 			break;
 		case Integrator::RungeKutta2:
