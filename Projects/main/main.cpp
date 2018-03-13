@@ -7,7 +7,7 @@
 #define TET_OUTNAME "cubeout"
 #define BGEO_EXT ".bgeo"
 #define BGEO_FNAME_PREFIX "frame_"
-#define OBJ_FNAME "sphere.obj"
+#define OBJ_FNAME "cube_subdiv.obj"
 
 constexpr double dt = 1e-4;
 constexpr double seconds = 20;
@@ -20,8 +20,8 @@ int main(int argc, char **argv) {
 	TastyIO::readOBJ(OBJ_FNAME, in);
 
 	std::cout << "Tetrahedralizing " OBJ_FNAME "..." << std::endl;
-	//tetrahedralize("pq1.1/0a0.1", &in, &out);
-	tetrahedralize("pq1.414/0a0.1", &in, &out);
+	tetrahedralize("pq1.1/0a0.1", &in, &out);
+	//tetrahedralize("pq1.414/0a0.1", &in, &out);
 
 	out.save_nodes(TET_OUTNAME);
 	out.save_elements(TET_OUTNAME);
@@ -29,9 +29,12 @@ int main(int argc, char **argv) {
 
 	//create a list of tetrahedra and an instance of particles from the .node and .ele files
     float k = 0.000001; //Young's modulus of jello
-    k = 1000000;
+    k = 100000;
 	float nu = 0.3;
 	Particles<double, 3> ptickles = Particles<double, 3>();
+	Eigen::Matrix<double, 3, 1> sphereCenter;
+	sphereCenter[0] = 0.0; sphereCenter[1] = 0.0; sphereCenter[2] = 0.0;
+	ptickles.setSphere(sphereCenter, 0.5);
     std::vector<Tetra<double, 3>> tets;
 
 	std::cout << "\nReading " TET_OUTNAME ".node..." << std::endl;

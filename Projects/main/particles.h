@@ -15,6 +15,14 @@ public:
 	std::vector<Eigen::Matrix<float, 3, 1>> colors;
 	std::vector<std::tuple<float, float>> uvs;
 
+	Eigen::Matrix<T, dim, 1> spherePos;
+	T radius;
+
+	void setSphere(Eigen::Matrix<T, dim, 1> pos, T rad) {
+		spherePos = pos;
+		radius = rad;
+	}
+
 	void setInitialTransform(Vector3d t, Vector3d r, Vector3d s) {
 		Mat4d tMat, rxMat, ryMat, rzMat, rMat, sMat;
 		tMat << 1.f, 0.f, 0.f, t[0],
@@ -128,13 +136,29 @@ void Particles<T, dim>::tick(T time) {
 		case Integrator::Euler:
 			as[i] = fs[i] / ms[i];
 			vs[i] += as[i] * time; // simple position and velocity case
-			if (xs[i][1] < 0.f && vs[i][1] < 0.f){
+			if (xs[i][1] < 0.f && vs[i][1] < 0.f) {
 				vs[i][0] = 0.f;
 				vs[i][1] = 0.f;
 				vs[i][2] = 0.f;
 			}
-			xs[i] += vs[i] * time;
-			break;
+			/*
+			if ((xs[i] - spherePos).norm() < radius) {
+				Eigen::Matrix<T, dim, 1> sphereNorm = (spherePos - xs[i]).normalized();
+				Eigen::Matrix<T, dim, 1> projVec = (vs[i].dot(sphereNorm)) * sphereNorm;
+				vs[i] = vs[i] - projVec;
+			}
+			*/
+
+            // Constraints
+            // Fixed constraint on left plane
+            if (xs[i][0] == -0.75f) {
+                vs[i][0] = 0.f;
+                vs[i][1] = 0.f;
+                vs[i][2] = 0.f;
+            }
+
+				xs[i] += vs[i] * time;
+				break;
 		case Integrator::RungeKutta2:
 			Eigen::Matrix<T, dim, 1> d1 = time * vs[i];
 			Eigen::Matrix<T, dim, 1> d2 = xs[i] + time * vs[i];
