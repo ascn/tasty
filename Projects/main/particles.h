@@ -151,14 +151,14 @@ void Particles<T, dim>::tick(T time) {
 
             // Constraints
             // Fixed constraint on left plane
-            if (xs[i][0] == -0.75f) {
+            if (xs[i][0] < -0.25f) {
                 vs[i][0] = 0.f;
                 vs[i][1] = 0.f;
                 vs[i][2] = 0.f;
             }
 
-				xs[i] += vs[i] * time;
-				break;
+			xs[i] += vs[i] * time;
+			break;
 		case Integrator::RungeKutta2:
 			Eigen::Matrix<T, dim, 1> d1 = time * vs[i];
 			Eigen::Matrix<T, dim, 1> d2 = xs[i] + time * vs[i];
