@@ -28,4 +28,5 @@ using Mat3f = Eigen::Matrix<float, 3, 3>;
 using Mat3d = Eigen::Matrix<double, 3, 3>;
 using Mat4f = Eigen::Matrix<float, 4, 4>;
 using Mat4d = Eigen::Matrix<double, 4, 4>;
+
 #endif // __GLOBALINCLUDES_H__

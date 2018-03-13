@@ -70,7 +70,11 @@ public:
 	}
 
 	void addForce(int idx, Eigen::Matrix<T, dim, 1> force) {
-		fs[idx] += force;
+		for (int i = 0; i < dim; ++i) {
+			if (std::abs(force[i]) > 1e-12) {
+				fs[idx][i] += force[i];
+			}
+		}
 	}
 
 	void addUniformForce(Eigen::Matrix<T, dim, 1> force) {

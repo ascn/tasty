@@ -7,11 +7,11 @@
 #define TET_OUTNAME "cubeout"
 #define BGEO_EXT ".bgeo"
 #define BGEO_FNAME_PREFIX "frame_"
-#define OBJ_FNAME "cube_subdiv.obj"
+#define OBJ_FNAME "sphere.obj"
 
 constexpr double dt = 1e-4;
 constexpr double seconds = 20;
-constexpr double fps = 24.f;
+constexpr double fps = 24.0;
 constexpr int frames = fps * seconds;
 int main(int argc, char **argv) {
 	// Tetrahedralize .obj and write to ele, node, face files
@@ -30,6 +30,7 @@ int main(int argc, char **argv) {
 	//create a list of tetrahedra and an instance of particles from the .node and .ele files
     float k = 0.000001; //Young's modulus of jello
     k = 1000000;
+	float nu = 0.3;
 	Particles<double, 3> ptickles = Particles<double, 3>();
     std::vector<Tetra<double, 3>> tets;
 
@@ -38,7 +39,7 @@ int main(int argc, char **argv) {
 	std::cout << "Read " << ptickles.xs.size() << " particles" << std::endl;
 
 	std::cout << "Reading " TET_OUTNAME ".ele..." << std::endl;
-    TastyIO::parseEleFile(TET_OUTNAME ".ele", tets, k, ptickles);
+    TastyIO::parseEleFile(TET_OUTNAME ".ele", tets, k, nu, ptickles);
 	std::cout << "Read " << tets.size() << " tetrahedrons" << std::endl;
 
 	ptickles.setInitialTransform(Vector3d(0.f, 1.5f, 0.f),
@@ -63,7 +64,7 @@ int main(int argc, char **argv) {
 		for (double timestep = 0; timestep < 1.f / fps; timestep += dt, cumTime += dt) {
 			ptickles.resetForces();
 			for (unsigned int i = 0; i < ptickles.fs.size(); ++i) {
-				ptickles.addForce(i, Vector3d(0.f, -9.81f * ptickles.ms[i], 0.f));
+				ptickles.addForce(i, Vector3d(0.f, -9.81 * ptickles.ms[i], 0.f));
 			}
 			for (Tetra<double, 3> tet : tets) {
 				tet.computeElasticForces();

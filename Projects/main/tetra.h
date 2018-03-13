@@ -9,10 +9,10 @@
 template <typename T, int dim>
 class Tetra {
 public:
-    Tetra(int x1, int x2, int x3, int x4, T k, Particles<T, dim> *p) :
+    Tetra(int x1, int x2, int x3, int x4, T k, T nu, Particles<T, dim> *p) :
 			W(T(0.0)),
 			// strainE(T(0.0)),
-			  k(k),
+			  k(k), nu(nu),
               F(Eigen::Matrix<T, 3, 3>()),
               Ds(Eigen::Matrix<T, 3, 3>()),
               Dm(Eigen::Matrix<T, 3, 3>()),
@@ -34,7 +34,7 @@ public:
 
     T W; // undeformed volume of the tetrahedra
     T k;
-    // T strainE; // strain energy
+	T nu;
     Eigen::Matrix<T, 3, 3> B;
     Eigen::Matrix<T, 3, 3> F; // deformation gradient
     Eigen::Matrix<T, 3, 3> Ds; // deformed state
@@ -134,7 +134,6 @@ void Tetra<T, dim>::computeParticleMass() {
 
 template <typename T, int dim>
 void Tetra<T, dim>::computeP() { // strain energy density
-	double nu = 0.3;
 	double mu = k / (2 * (1.0 + nu));
 	double lambda = (k * nu) / ((1.0 + nu) * (1.0 - (2.0 * nu)));
 	Mat3d E = (1.0 / 2.0) * (F.transpose() * F - Mat3d::Identity());

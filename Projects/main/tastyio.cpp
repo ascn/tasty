@@ -110,7 +110,7 @@ void TastyIO::parseNodeFile(const std::string &inputNodeFile, Particles<double, 
 	}
 }
 
-void TastyIO::parseEleFile(const std::string &inputEleFile, std::vector<Tetra<double, 3>> &tets, double k, Particles<double, 3> &p) {
+void TastyIO::parseEleFile(const std::string &inputEleFile, std::vector<Tetra<double, 3>> &tets, double k, double nu, Particles<double, 3> &p) {
 	std::string text;
 	std::ifstream file(inputEleFile);
 
@@ -128,7 +128,7 @@ void TastyIO::parseEleFile(const std::string &inputEleFile, std::vector<Tetra<do
             }
         }
 
-		Tetra<double, 3> t = Tetra<double, 3>(vals[1], vals[2], vals[3], vals[4], k, &p);
+		Tetra<double, 3> t = Tetra<double, 3>(vals[1], vals[2], vals[3], vals[4], k, nu, &p);
 		tets.push_back(t);
 	}
 }
