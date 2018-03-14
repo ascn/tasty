@@ -24,6 +24,8 @@ public:
 					computeParticleMass();
                 }
 
+    void computeSphereCenter();
+    void computeSphereRadius();
     void computeDm(); // material's rest state
     void computeDs(); // Ds is the deformed state
     void computeDefGrad(); // F = DsDm^(-1)
@@ -35,17 +37,59 @@ public:
     T W; // undeformed volume of the tetrahedra
     T k;
 	T nu;
+    T sphereRadius; // Bounding sphere's radius
     Eigen::Matrix<T, 3, 3> B;
     Eigen::Matrix<T, 3, 3> F; // deformation gradient
     Eigen::Matrix<T, 3, 3> Ds; // deformed state
     Eigen::Matrix<T, 3, 3> Dm; // material state
     Eigen::Matrix<T, 3, 3> P;
+    Eigen::Matrix<T, 3, 1> X; // Center of the tetrahedron's bounding sphere
     int x1;
     int x2;
     int x3;
     int x4;
     Particles<T, dim> *p;
+};
 
+// Compute the (x,y,z) position of this tetrahedron's bounding sphere
+template <typename T, int dim>
+void Tetra<T, dim>::computeSphereCenter() {
+    Eigen::Matrix<T, 3, 1> A = p->getPosition(x1);
+    Eigen::Matrix<T, 3, 1> B = p->getPosition(x2);
+    Eigen::Matrix<T, 3, 1> C = p->getPosition(x3);
+    Eigen::Matrix<T, 3, 1> D = p->getPosition(x4);
+    Eigen::Matrix<T, 3, 3> M = Eigen::Matrix<T, 3, 3>::Zero();
+
+    for (int i = 0; i < 3; ++i) {
+        for (int j = 0; j < 3; ++j) {
+            if (i == 0) {
+                M[i][j] = A[j] - B[j];
+            }
+            else if (i == 1) {
+                M[i][j] = B[j] - C[j];
+            }
+            else {
+                M[i][j] = C[j] - D[j];
+            }
+        }
+    }
+
+    // Really just in here for posterity; we shouldn't ever hit this case for a properly tetrahedralized mesh
+    if (M.determinant() == 0) {
+        throw std::logic_error("All points are coplanar; cannot find a unique solution.");
+    }
+
+    Eigen::Matrix<T, 3, 1> y;
+    y << (A.squaredNorm() - B.squaredNorm()), (B.squaredNorm() - C.squaredNorm()), (C.squaredNorm() - D.squaredNorm());
+
+    X = M.inverse() * (0.5 * y);
+};
+
+// Compute the radius of this tetrahedron's bounding sphere, given the center has been found
+template <typename T, int dim>
+void Tetra<T, dim>::computeSphereRadius() {
+    Eigen::Matrix<T, 3, 1> R = X - (p->getPosition(x1));
+    sphereRadius = R.norm();
 };
 
 template <typename T, int dim>
