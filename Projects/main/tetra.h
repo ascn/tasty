@@ -58,18 +58,18 @@ void Tetra<T, dim>::computeSphereCenter() {
     Eigen::Matrix<T, 3, 1> B = p->getPosition(x2);
     Eigen::Matrix<T, 3, 1> C = p->getPosition(x3);
     Eigen::Matrix<T, 3, 1> D = p->getPosition(x4);
-    Eigen::Matrix<T, 3, 3> M = Eigen::Matrix<T, 3, 3>::Zero();
+    Eigen::Matrix<T, 3, 3> M;
 
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
             if (i == 0) {
-                M[i][j] = A[j] - B[j];
+                M(i, j) = A(j, 0) - B(j, 0);
             }
             else if (i == 1) {
-                M[i][j] = B[j] - C[j];
+                M(i, j) = B(j, 0) - C(j, 0);
             }
             else {
-                M[i][j] = C[j] - D[j];
+                M(i, j) = C(j, 0) - D(j, 0);
             }
         }
     }
@@ -80,9 +80,11 @@ void Tetra<T, dim>::computeSphereCenter() {
     }
 
     Eigen::Matrix<T, 3, 1> y;
-    y << (A.squaredNorm() - B.squaredNorm()), (B.squaredNorm() - C.squaredNorm()), (C.squaredNorm() - D.squaredNorm());
+    y(0, 0) = 0.5 * (A.squaredNorm() - B.squaredNorm());
+    y(1, 0) = 0.5 * (B.squaredNorm() - C.squaredNorm());
+    y(2, 0) = 0.5 * (C.squaredNorm() - D.squaredNorm());
 
-    X = M.inverse() * (0.5 * y);
+    X = M.inverse() * y;
 };
 
 // Compute the radius of this tetrahedron's bounding sphere, given the center has been found
