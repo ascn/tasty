@@ -17,3 +17,10 @@ Projects/main/main
 *.node
 *.face
 *.poly
+render/
+*.hipnc
+*.obj
+*frames/
+*.psd
+*.tif
+images/
