@@ -1,18 +1,19 @@
-# Tasty
-## 3D Deformable Solid Simulator (FEM)
+# Tasty - 3D Deformable Solid Simulator (FEM)
+## Alexander Chan, Tabatha Hickman, Jacob Snipes, Emily Vo
 
 ## Demos
 *All demos were rendered in Houdini.*
 
-[Youtube Playlist](https://www.youtube.com/watch?v=z2EsRtdZlbw&t=0s&index=1&list=PLUNegSVHL7HHBmUMiakQnGe770Lrdw7uP)
+Click the gif to see the corresponding uncompressed video. Click
+[here](https://www.youtube.com/watch?v=z2EsRtdZlbw&t=0s&index=1&list=PLUNegSVHL7HHBmUMiakQnGe770Lrdw7uP) for the full video playlist.
 
-[![Luxo](images/luxo_gif.gif)](https://youtu.be/z2EsRtdZlbw)
+| Luxo Ball | Stanford Bunny |
+|:---------:|:--------------:|
+|[![Luxo](images/luxo_gif.gif)](https://youtu.be/z2EsRtdZlbw)|[![Stanford Bunny](images/stanford_bunny.gif)](https://youtu.be/LyKA3JTdF1A)|
 
-[![Stanford Bunny](images/stanford_bunny.gif)](https://youtu.be/LyKA3JTdF1A)
-
-[![? Block](images/qblock_gif.gif)](https://youtu.be/pDOL-MeccCc)
-
-[![Thwomp](images/thwomp.gif)](https://youtu.be/x7OqWdoQv1k)
+| ? Block (Constraints) | Thwomp (Sphere Collision) |
+|:---------:|:--------------:|
+|[![? Block](images/qblock_gif.gif)](https://youtu.be/pDOL-MeccCc)|[![Thwomp](images/thwomp.gif)](https://youtu.be/x7OqWdoQv1k)|
 
 ## Implementation Details
 
@@ -27,6 +28,11 @@ particle, and to all particles (`Particles::addUniformForce`).
 
 ### `tetra.h`
 
+The `Tetra` class represents a tetrahedron. It contains 4 particle indices, a mass, and various member functions to
+compute
+*D<sub>s</sub>*, *P*, and *H*. `Tetra::computeElasticForces` will calculate the elastic forces on each of the four
+vertices of the tetrahedron and add the forces to their respective particles in the contained `Particle` class.
+
 ### `main.cpp`
 
 The main procedure of the simulation is as follows:
@@ -36,13 +42,54 @@ The main procedure of the simulation is as follows:
 	- Initialize the particle's velocity, acceleration, and force to 0
 	- Initialize the particle's mass to 0
 - Create a tetra structure for each tetrahedron in the .ele file
-	- For each tetra, compute D<sub>m</sub> and W
-	- Add (density * W) / 4 to the mass of each particle
+	- For each tetra, compute *D<sub>m</sub>* and *W*
+	- Add *(density * W) / 4* to the mass of each particle
 - At each timestep:
 	- Reset all forces
 	- Add gravitational force
 	- Calculate internal elastic forces
 	- Update kinematics and fix collisions
+
+We use a forward Euler integrator with the Neo-Hookean elastic model for all the demos. Constraints are handled
+by simply not updating constrained particle's accelerations, velocities, or positions. Collisions are handled
+with planes and spheres by detecting if a particle's position is inside the object and its velocity is moving
+against the normal of the object at the point of intersection, then setting the velocity to 0.
+
+## Struggles
+- Phantom elastic forces
+	- Caused by using `==` instead of `=` when resetting forces
+	- Caused the mesh to explode or collapse
+- Inverting tetrahedrons
+	- Caused by using elastic models other than Neo-Hookean
+- Improper meshes with self intersections and holes
+	- Manually fixed meshes in Maya
+- NaN values
+	- Timestep too large for forward Euler integration
+	- Tiny forces caused by floating point error, used an epsilon to discard small forces
+- Low Young's modulus values
+	- Caused simulation to look bad
+
+## Contributions
+- Alexander Chan
+	- Setting up project and base code
+	- Implementing all the elastic models in the 2012 SIGGRAPH course notes
+	- Debugging
+	- Scene setup and rendering
+- Tabatha Hickman
+	- Research
+	- Tetgen data I/O
+	- Rigid body collisions
+	- Rendering
+- Jacob Snipes
+	- Research
+	- Debugging
+	- Constraints
+	- Interobject collision
+- Emily Vo
+	- Particle system class
+	- Force and energy calculation
+	- Scene setup
+	- Interobject collision
 
 ## Resources
 
